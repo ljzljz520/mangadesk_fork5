@@ -53,6 +53,17 @@ const ( // Help page colors
 	HelpPageBorderColor = tcell.ColorLightGrey
 )
 
+const ( // Downloads page colors
+	DownloadsPageGridTitleColor   = tcell.ColorOrange
+	DownloadsPageGridBorderColor  = tcell.ColorLightGrey
+	DownloadsPageTableBorderColor = tcell.ColorGrey
+	DownloadsPageStatusColor      = tcell.ColorPowderBlue
+	DownloadsPageMangaColor       = tcell.ColorLightGoldenrodYellow
+	DownloadsPageChapterColor     = tcell.ColorLightSkyBlue
+	DownloadsPageQualityColor     = tcell.ColorLightGrey
+	DownloadsPageFormatColor      = tcell.ColorDarkSalmon
+)
+
 const ( // Modal colors
 	ModalColor = tcell.ColorDarkSlateGrey
 )

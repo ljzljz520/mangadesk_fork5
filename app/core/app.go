@@ -19,6 +19,10 @@ var (
 type MangaDesk struct {
 	Client *mangodex.DexClient
 
+	// Downloads : Application-owned bounded download queue. It outlives any
+	// individual manga page and must be stopped before the terminal and logs.
+	Downloads *DownloadManager
+
 	TView      *tview.Application
 	PageHolder *tview.Pages
 
@@ -52,7 +56,12 @@ func (m *MangaDesk) Initialise() error {
 
 // Shutdown : Stop all services such as logging and let the application shut down gracefully.
 func (m *MangaDesk) Shutdown() {
-	// Stop all necessary services, such as logging.
+	// Stop accepting downloads, cancel all active tasks and wait for their
+	// goroutines (and any UI callbacks they may still be making) to finish.
+	// This must happen before the terminal is torn down or logs are closed.
+	if m.Downloads != nil {
+		m.Downloads.Close()
+	}
 
 	// Sync the screen to make sure that the terminal screen is not corrupted.
 	App.TView.Sync()

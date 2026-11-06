@@ -35,12 +35,16 @@ func newHelpPage() *HelpPage {
 		fmt.Sprintf(formatString, "Ctrl + L", "Login/Logout") +
 		fmt.Sprintf(formatString, "Ctrl + K", "Keybinds/Help") +
 		fmt.Sprintf(formatString, "Ctrl + S", "Search") +
+		fmt.Sprintf(formatString, "Ctrl + D", "Download Queue") +
 		"\nManga Page\n" +
 		fmt.Sprintf(formatString, "Ctrl + E", "Select mult.") +
 		fmt.Sprintf(formatString, "Ctrl + A", "Toggle All") +
 		fmt.Sprintf(formatString, "Ctrl + R", "Toggle Read Status") +
 		fmt.Sprintf(formatString, "Ctrl + Q", "Toggle Follow Manga") +
 		fmt.Sprintf(formatString, "Enter", "Start download") +
+		"\nDownloads Page\n" +
+		fmt.Sprintf(formatString, "c / Ctrl + X", "Cancel Selected") +
+		fmt.Sprintf(formatString, "r", "Clear Finished") +
 		"\nOthers\n" +
 		fmt.Sprintf(formatString, "Esc", "Go back") +
 		fmt.Sprintf(formatString, "Ctrl + F/B", "Next/Prev Page") +

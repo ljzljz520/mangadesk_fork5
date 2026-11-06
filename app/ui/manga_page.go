@@ -117,11 +117,30 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		},
 	}
 
+	// Track the page so download tasks can update it even though the queue
+	// itself is owned by the application.
+	registerMangaPage(mangaPage)
+
 	// Set up values
 	go mangaPage.setMangaInfo()
 	go mangaPage.setChapterTable()
 
 	return mangaPage
+}
+
+// downloadFolder : Current on-disk folder used to detect an existing download.
+func (p *MangaPage) downloadFolder(chapter *mangodex.Chapter) string {
+	return core.DownloadFolder(core.DownloadRequest{
+		MangaTitle:    p.Manga.GetTitle("en"),
+		ChapterID:     chapter.ID,
+		ChapterNumber: chapter.GetChapterNum(),
+		ChapterTitle:  chapter.GetTitle(),
+		Language:      chapter.Attributes.TranslatedLanguage,
+		Quality:       core.App.Config.DownloadQuality,
+		AsZip:         core.App.Config.AsZip,
+		ZipType:       core.App.Config.ZipType,
+		DownloadDir:   core.App.Config.DownloadDir,
+	})
 }
 
 // setMangaInfo : Set up manga information.
@@ -234,7 +253,7 @@ func (p *MangaPage) setChapterTable() {
 		// Chapter download status
 		var downloadStatus string
 		// Check for the presence of the download folder.
-		if _, err = os.Stat(p.getDownloadFolder(&chapter)); err == nil {
+		if _, err = os.Stat(p.downloadFolder(&chapter)); err == nil {
 			downloadStatus = "Y"
 		}
 		downloadCell := tview.NewTableCell(downloadStatus).SetTextColor(utils.MangaPageDownloadStatColor)

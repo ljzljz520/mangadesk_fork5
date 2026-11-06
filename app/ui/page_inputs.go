@@ -19,6 +19,9 @@ func SetUniversalHandlers() {
 	// Enable mouse inputs.
 	core.App.TView.EnableMouse(true)
 
+	// Connect the application download queue to the UI.
+	bindDownloadHooks()
+
 	// Set universal keybindings
 	core.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -28,6 +31,8 @@ func SetUniversalHandlers() {
 			ctrlKInput()
 		case tcell.KeyCtrlS: // Search page.
 			ctrlSInput()
+		case tcell.KeyCtrlD: // Downloads page.
+			ctrlDInput()
 		case tcell.KeyCtrlC: // Ctrl-C interrupt.
 			ctrlCInput()
 		}
@@ -84,9 +89,27 @@ func ctrlSInput() {
 	ShowSearchPage()
 }
 
-// ctrlCInput : Sends an interrupt signal to the application to stop.
+// ctrlDInput : Shows the application-wide downloads page to the user.
+func ctrlDInput() {
+	// Do not allow when on login screen.
+	if page, _ := core.App.PageHolder.GetFrontPage(); page == utils.LoginPageID {
+		return
+	}
+	ShowDownloadsPage()
+}
+
+// ctrlCInput : Begin graceful shutdown. The download queue stops accepting
+// tasks, all tasks are cancelled and awaited, and only then the terminal is
+// stopped. Logging is closed afterwards by service.Shutdown.
 func ctrlCInput() {
-	log.Println("TView stopped by Ctrl-C interrupt.")
+	log.Println("Received Ctrl-C interrupt. Draining download queue before exit...")
+	go gracefulShutdown()
+}
+
+// gracefulShutdown : Drain the download queue before stopping the interface.
+func gracefulShutdown() {
+	core.App.Downloads.Close()
+	Deactivate()
 	core.App.TView.Stop()
 }
 
@@ -184,6 +207,7 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 		switch event.Key() {
 		case tcell.KeyEsc:
 			cancel()
+			unregisterMangaPage(p)
 			core.App.PageHolder.RemovePage(utils.MangaPageID)
 		}
 		return event
@@ -193,10 +217,10 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 	p.Table.SetSelectedFunc(func(row, _ int) {
 		log.Println("Creating and showing confirm download modal...")
 		modal := confirmModal(utils.DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
-			// Create a copy of the Selection.
+			// Create a copy of the Selection and enqueue frozen tasks. The
+			// downloads keep running even after this page is closed.
 			selected := p.sWrap.CopySelection(row)
-			// Download selected chapters.
-			go p.downloadChapters(selected, 0)
+			p.submitDownloads(selected)
 		})
 		ShowModal(utils.DownloadChaptersModalID, modal)
 	})

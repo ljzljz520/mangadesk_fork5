@@ -19,6 +19,10 @@ func Start() {
 		PageHolder: tview.NewPages(),
 	}
 
+	// Create the application-owned download queue.
+	core.App.Downloads = core.NewDownloadManager(
+		core.NewDexAtHome(), core.DefaultDownloadConcurrency)
+
 	// Show appropriate screen based on restore session result.
 	if err := core.App.Initialise(); err != nil {
 		ui.ShowLoginPage()
@@ -37,5 +41,8 @@ func Start() {
 
 // Shutdown : Shutdown the application.
 func Shutdown() {
+	// Stop delivering UI callbacks before the download queue is drained, so a
+	// task finishing during shutdown never blocks on a stopped event loop.
+	ui.Deactivate()
 	core.App.Shutdown()
 }
